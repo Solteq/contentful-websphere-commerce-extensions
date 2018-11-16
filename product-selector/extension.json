@@ -1,0 +1,33 @@
+{
+  "id": "websphere-commerce-product-selector",
+  "name": "WebSphere Commerce Product Selector",
+  "srcdoc": "extension.html",
+  "fieldTypes": ["Object"],
+  "parameters": {
+    "installation": [
+      {
+        "id": "searchServerBaseUrl",
+        "name": "Search server base URL",
+        "description": "Base URL part of search server up to, but excluding /search",
+        "type": "Symbol",
+        "required": true
+      },
+      {
+        "id": "imageServerBaseUrl",
+        "name": "Image Server base URL",
+        "description": "Base URL to prepend to thumbnail paths, in case they are relative paths",
+        "type": "Symbol",
+        "required": true
+      },
+      {
+        "id": "storeId",
+        "name": "Store ID from WebSphere Commerce",
+        "description": "The store id from which to pull data",
+        "type": "Number",
+        "required": true
+      }
+    ],
+    "instance": [
+    ]
+  }
+}

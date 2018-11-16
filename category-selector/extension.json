@@ -1,0 +1,40 @@
+{
+  "id": "websphere-commerce-category-selector",
+  "name": "WebSphere Commerce Category Selector",
+  "srcdoc": "extension.html",
+  "fieldTypes": ["Object"],
+  "parameters": {
+    "installation": [
+      {
+        "id": "searchServerBaseUrl",
+        "name": "Search server base URL",
+        "description": "Base URL part of search server up to, but excluding /search",
+        "type": "Symbol",
+        "required": true
+      },
+      {
+        "id": "imageServerBaseUrl",
+        "name": "Image Server base URL",
+        "description": "Base URL to prepend to thumbnail paths, in case they are relative paths",
+        "type": "Symbol",
+        "required": true
+      },
+      {
+        "id": "storeId",
+        "name": "Store ID",
+        "description": "The store id in WebSphere Commerce from which to pull data",
+        "type": "Number",
+        "required": true
+      },
+      {
+        "id": "fallbackImage",
+        "name": "Fallback  Image",
+        "description": "URL to a fallback image to use, if there is no image on the category. Can be relative or absolute",
+        "type": "Symbol",
+        "required": false
+      }      
+    ],
+    "instance": [
+    ]
+  }
+}

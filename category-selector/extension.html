@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Contentful UI-Extension Websphere Commerce Categories</title>
+    <link rel="stylesheet" href="https://contentful.github.io/ui-extensions-sdk/cf-extension.css">
+    <style>
+        .product.selectedProduct {
+                display: none;
+                cursor: default !important;
+                margin-bottom: 40px;
+            }
+
+   
+
+            .product.selectedProduct:hover {
+                background-color: transparent;
+            }
+
+            .product.selectedProduct .product-image {
+                margin-top: 30px;
+            }
+
+            .product-delete {
+                cursor: pointer;
+                border: 1px solid #000000;
+                border-radius: 50%;
+                width: 18px;
+                height: 18px;
+                float: right;
+                text-align: center;
+            }
+
+            .product-delete:hover {
+                background-color: #000000;
+                color: #ffffff;
+            }
+
+            .product-grid {
+                display: flex;
+                flex-wrap: wrap;
+                margin-top: 40px;
+            }
+            .selected-product-grid {
+                display: flex;
+                flex-wrap: wrap;
+                margin-top: 40px;
+            }
+
+            .product {
+                border: 1px solid #F3F3F3;
+                padding: 10px;
+                cursor: pointer;
+                width: 200px;
+                margin-left: 20px;
+                margin-bottom: 20px;
+            }
+
+            .product:hover {
+                background-color: #F3F3F3;
+            }
+
+            .product-image {
+                width: 100%;
+                height: 0;
+                padding-bottom: 100%;
+                background-position: center;
+                background-size: cover;
+            }
+
+            .product-title {
+                margin-top: 10px;
+                text-align: center;
+                font-weight: bold;
+            }
+        </style>
+    <script src="https://unpkg.com/contentful-ui-extensions-sdk@3"></script>
+</head>
+
+<body id="websphere-commerce-category-widget">
+    <div id="content">
+        <div class="selectedProduct selected-product-grid">
+        </div>
+        <input id="productQuery" class="cf-form-input" type="string" placeholder="Name of category" />
+        <div class="cf-form-label">
+            <label for="productQuery">Search categories</label>
+        </div>
+        <div class="product-grid"></div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script>
+        // jquery throttle -> https://raw.githubusercontent.com/cowboy/jquery-throttle-debounce/v1.1/jquery.ba-throttle-debounce.min.js
+        (function (b, c) { var $ = b.jQuery || b.Cowboy || (b.Cowboy = {}), a; $.throttle = a = function (e, f, j, i) { var h, d = 0; if (typeof f !== "boolean") { i = j; j = f; f = c } function g() { var o = this, m = +new Date() - d, n = arguments; function l() { d = +new Date(); j.apply(o, n) } function k() { h = c } if (i && !h) { l() } h && clearTimeout(h); if (i === c && m > e) { l() } else { if (f !== true) { h = setTimeout(i ? k : l, i === c ? e - m : e) } } } if ($.guid) { g.guid = j.guid = j.guid || $.guid++ } return g }; $.debounce = function (d, e, f) { return f === c ? a(d, e, false) : a(d, f, e !== false) } })(this);
+    </script>
+    <script>
+        var allCategories = [];
+        var searchServerBaseURL = '';
+        var imageServerBaseURL = '';
+        window.contentfulExtension.init(extension => {
+            // Size iframe
+            extension.window.startAutoResizer();
+
+            searchServerBaseURL = extension.parameters.installation.searchServerBaseUrl + '/search/resources/store/' + extension.parameters.installation.storeId + '/';
+            imageServerBaseURL = extension.parameters.installation.imageServerBaseUrl;
+            preloadCategories();
+
+            console.log(extension.parameters);
+            console.log(searchServerBaseURL, imageServerBaseURL);
+            const $selectedProduct = $('.selected-product-grid');
+            const $products = $('.product-grid');
+            const $select = $('#productQuery');
+
+            // Set initial value
+            const value = extension.field.getValue();
+            console.log('existing value', value);
+            if (value && !jQuery.isEmptyObject(value)) {
+
+                $.each(value, function (i, item) {
+                    if (item) {
+                        const image = item.image;
+                        const inner = '<div class="product" data-product-partnum="' + item.identifier + '"><div class="product-delete" product-delete>X</div><div class="product-image" style="background-image:url(' + image + ')"></div><div class="product-title">' + item.name + '</div></div>';
+                        $selectedProduct.append(inner);
+                        $selectedProduct.addClass('active');
+                    }
+                });
+            }
+
+            // Remove selected product on delete button event
+            $('[product-delete]').on('click', function (ev) {
+                let value = extension.field.getValue() || [];
+                const tile = $(this).parent();
+                const selectedSku = String($(tile).data('product-partnum'));
+                console.log('delete', ev, tile, selectedSku);
+                let newValue = value.filter(x => x.identifier !== selectedSku);
+                console.log(newValue);
+                extension.field.setValue(newValue);
+                $(tile).remove();
+            });
+
+            $select.on('keydown', $.throttle(250, event => {
+                productLookup(event.target.value).then(response => {
+                    renderProducts(response);
+                });
+            }));
+
+            function getAbsoluteImageUrl(imgUrl) {
+                var u = imgUrl;
+                if (u && !u.startsWith('http')) {
+                    u = imageServerBaseURL + u;
+                }
+                return u;
+            }
+
+            function renderProducts(products) {
+                $products.html('');
+                console.log(products);
+
+                // update search result.
+                $.each(products, function (i, item) {
+                    console.log(item);
+                    const inner = '<div class="product" data-product-select="' + item.identifier + '"><div class="product-image" style="background-image:url(' + item.image + ')"></div><div class="product-title">' + item.name + '</div></div>';
+                    $products.append(inner);
+                });
+
+
+                // add click handler to search result
+                $('[data-product-select]').on('click', function () {
+                    // Find selected id in array of products && set field
+                    const id = String($(this).data('product-select'));
+                    console.log('clicked on ', id, products);
+                    const item = products.find(x => x.identifier === id);
+                    if(!item) {
+                        return;
+                    }
+
+                    // store it
+                    let currentValue = extension.field.getValue() || [];
+                    currentValue.push(item);
+                    currentValue = currentValue.filter( x => !!x);
+                    console.log('storing selection', currentValue);
+                    extension.field.setValue(currentValue);
+
+                    // add the clicked item to the selected list
+                    const inner = '<div class="product" data-product-partnum="' + item.identifier + '"><div class="product-delete" product-delete>X</div><div class="product-image" style="background-image:url(' + item.image + ')"></div><div class="product-title">' + item.name + '</div></div>';
+                    $selectedProduct.append(inner);
+                    $selectedProduct.addClass('active');
+                });
+            }
+             	function preloadCategories() {
+
+                  var searchUrl = searchServerBaseURL + '/categoryview/@top?depthAndLimit=-1,-1,-,1-1,-1';
+                  $.ajax({
+                        url: searchUrl,
+                        method: 'GET',
+                        cache: true,
+                        headers: {
+                        
+                        },
+                    }).then( result => {
+                    
+                    	saveCategories(result.catalogGroupView);
+                    
+                  });
+                }
+              
+              	function saveCategories(categories) {
+                  
+                  for (category of categories) {
+                    if (!category.thumbnail) {
+                      category.thumbnail = extension.parameters.installation.fallbackImage;
+                    }
+                    if (!category.thumbnail) {
+                        category.thumbnail = 'https://picsum.photos/g/200/300?random';
+                    }
+                    category.thumbnail = getAbsoluteImageUrl(category.thumbnail);
+                    allCategories.push({
+                        name: category.name,
+                        image: category.thumbnail,
+                        identifier: category.identifier
+                    });
+                    if (category.catalogGroupView) {
+                      saveCategories(category.catalogGroupView);
+                    }
+                  }
+                }
+              
+                function productLookup(query) {
+                  const result = [];
+                  if (query) {
+                    for(category of allCategories) {
+                      var regexp = new RegExp(query,'ig');
+                      if (regexp.test(category.name)) {
+                        result.push(category);
+                      }
+                    }
+                  }
+                  return Promise.resolve(result);
+                }
+        });
+    </script>
+</body>
+
+</html>
