@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Section Header</title>
+    <link rel="stylesheet" href="https://contentful.github.io/ui-extensions-sdk/cf-extension.css">
+    <style>
+        .color {
+            margin: 5px;
+            width: 35px;
+            height: 35px;
+            float: left;
+        }
+
+        .unselected {
+            width: 35px;
+            height: 35px;
+            border: none;
+        }
+
+        .selected {
+            width: 70px;
+            height: 70px;
+        }
+
+        #content {
+            padding: 4px;
+            background-color: #dfdfdf;
+        }
+    </style>
+    <script src="https://unpkg.com/contentful-ui-extensions-sdk@3"></script>
+</head>
+
+<body id="sq-section-seperator">
+        <h1>Primary Colors</h1>
+        <div id="primarycolor"></div>
+        <div style="clear:both;"/>
+        <h2>Secondary Colors</h2>
+        <div id="secondarycolor"></div>
+        <div style="clear:both;"/>
+        <script>
+        selectedValElem = null;
+        ext = null;
+        window.contentfulExtension.init(extension => {
+            // Size iframe
+            ext = extension;
+            extension.window.startAutoResizer();
+            primaryColors = parseColorDef(extension.parameters.installation.primaryColors);
+            secondaryColors = parseColorDef(extension.parameters.installation.secondaryColors);
+
+            const value = extension.field.getValue();
+
+            primaryColorElem = document.getElementById('primarycolor');
+            for(color of primaryColors) {
+                colorElem = document.createElement('div');
+                colorElem.style.backgroundColor = color.color;
+                colorElem.className = 'unselected color';
+                colorElem.id = color.name;
+                colorElem.addEventListener('click', handleClick);
+                colorElem.innerText = ' ';
+                primaryColorElem.appendChild(colorElem);
+            }
+            secondaryColorElem = document.getElementById('secondarycolor');
+            for(color of secondaryColors) {
+                colorElem = document.createElement('div');
+                colorElem.style.backgroundColor = color.color;
+                colorElem.className = 'unselected color';
+                colorElem.id = color.name;
+                colorElem.addEventListener('click', handleClick);
+                colorElem.innerText = ' ';
+                secondaryColorElem.appendChild(colorElem);
+            }
+
+
+             selectedValElem = document.getElementById(value);
+            if (selectedValElem) {
+                selectedValElem.className = "selected color";
+            }
+        });
+
+        function handleClick(ev) {
+            console.log(ev);
+            if (selectedValElem) {
+                selectedValElem.className = "unselected color";
+            }
+            selectedValElem = ev.srcElement;
+            ev.srcElement.className = "selected color";
+            ext.field.setValue(ev.srcElement.id);
+        }
+
+        function parseColorDef(s) {
+            result = [];
+	    if (!s) {
+		s = '';
+	    }
+            colors = s.split(';');
+            for(color of colors) {
+                colordef = color.split('|');
+                result.push( {
+                    name: colordef[0],
+                    color: colordef[1],
+                });
+            }
+            return result;
+         }
+    </script>
+</body>
+
+</html>

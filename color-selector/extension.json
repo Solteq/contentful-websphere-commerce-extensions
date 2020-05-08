@@ -1,0 +1,27 @@
+{
+  "id": "sq-color-selector",
+  "name": "Color Selector",
+  "srcdoc": "extension.html",
+  "fieldTypes": ["Text","Symbol"],
+  "parameters": {
+    "installation": [
+      {
+        "id": "primaryColors",
+        "name": "Primary Colors",
+        "description": "Primary Colors",
+        "type": "Symbol",
+        "required": true
+      },
+      {
+        "id": "secondaryColors",
+        "name": "Secondary Colors",
+        "description": "Secondary Colors",
+        "type": "Symbol",
+        "required": true
+      }
+    ],
+    "instance": [
+
+    ]
+  }
+}
